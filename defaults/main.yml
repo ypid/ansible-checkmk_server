@@ -12,10 +12,11 @@
 checkmk_server__version: '1.2.8p16'
 
 
-# .. envvar:: checkmk_server__version_label
+# .. envvar:: checkmk_server__version_suffix
 #
-# Check_MK version label used with the :command:`omd` tool.
-checkmk_server__version_label: '{{ checkmk_server__version }}.cre'
+# Check_MK version suffix to :envvar:`checkmk_server__version` used with the
+# :command:`omd` tool.
+checkmk_server__version_suffix: '.cre'
 
 
 # .. envvar:: checkmk_server__site_update
@@ -30,9 +31,9 @@ checkmk_server__site_update: False
 # Custom patches to apply after installing Check_MK package
 checkmk_server__patches:
   - patch: 'check-mk-raw-1.2.8-set-https-proxy-header.patch'
-    file: '/omd/versions/{{ checkmk_server__version_label }}/skel/etc/apache/apache-own.conf'
+    file: '/omd/versions/{{ checkmk_server__version }}{{ checkmk_version__suffix }}/skel/etc/apache/apache-own.conf'
   - patch: 'check-mk-raw-1.2.8p4-read-X-Forwarded-Port-header.patch'
-    file: '/omd/versions/{{ checkmk_server__version_label }}/skel/etc/apache/conf.d/omd.conf'
+    file: '/omd/versions/{{ checkmk_server__version }}{{ checkmk_version__suffix }}/skel/etc/apache/conf.d/omd.conf'
 
 
 # .. envvar:: checkmk_server__ferm_dependent_rules
@@ -162,8 +163,7 @@ checkmk_server__webapi_url: '{{ checkmk_server__site_url + "/check_mk/webapi.py"
 # :ref:`checkmk_server__ref_omd_config` for more details.
 checkmk_server__omd_config: '{{
   checkmk_server__omd_config_email +
-  checkmk_server__omd_config_core +
-  (checkmk_server__omd_config_livestatus if checkmk_server__multisite_livestatus|d() else [])
+  checkmk_server__omd_config_core
 }}'
 
 
@@ -181,16 +181,6 @@ checkmk_server__omd_config_email:
 checkmk_server__omd_config_core:
   - var: 'CORE'
     value: 'icinga'
-
-
-# .. envvar:: checkmk_server__omd_config_livestatus
-#
-# Livestatus service configuration via OMD.
-checkmk_server__omd_config_livestatus:
-  - var: 'LIVESTATUS_TCP'
-    value: 'on'
-  - var: 'LIVESTATUS_TCP_PORT'
-    value: '{{ checkmk_server__livestatus_port }}'
 
 
 # .. envvar:: checkmk_server__sshkeys
@@ -442,30 +432,28 @@ checkmk_server__multisite_user_connection_defaults:
 #
 # Distributed monitoring sites configuration. For more details see
 # :ref:`checkmk_server__ref_distributed_sites`
-#checkmk_server__distributed_sites: {}
+checkmk_server__distributed_sites: []
 #  name: site_name
 #  inventory_host: slavehost
 #  tls
 
+checkmk_server__sites: '{{ lookup("template", "lookup/checkmk_server__sites.j2", convert_data=False) | from_yaml }}'
 
 # .. envvar:: checkmk_server__distributed_sites_defaults
 #
 # Default sites properties for distributed monitoring.
-#checkmk_server__distributed_sites_defaults:
-  #username: 'sitesync'
+checkmk_server__distributed_sites_defaults:
+  multisite_username: 'sitesync'
   #password: '{{ lookup("password", secret + "/credentials/" + ansible_fqdn + "/checkmk_server/" + checkmk_server__site + "/sitesync/password") }}'
-  #disabled: False
-  #disable_wato: True
-  #insecure: False
-  #multisiteurl: ''
-  #persist: False
-  #replicate_ec: False
-  #replicate_mkps: True
-  #replication: ''
-  #status_host: None
-  #timeout: 10
-  #url_prefix: ''
-  #user_login: True
+  multisite_disable_wato: True
+  multisite_insecure: False
+  multisite_persist: False
+  multisite_replicate_ec: False
+  multisite_replicate_mkps: True
+  multisite_replication: True
+  multisite_status_host: None
+  multisite_timeout: 10
+  multisite_user_login: True
 
 
 # ----------------

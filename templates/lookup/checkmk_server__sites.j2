@@ -1,0 +1,150 @@
+{#
+ #  Get site configuration
+ #
+ #  This Jinja templates requires at least Ansible 2.1.4, 2.2.2, 2.3.0, see:
+ #  https://github.com/ansible/ansible/issues/14542
+ #}
+
+{% if not checkmk_server__distributed_sites %}
+[]
+{% else %}
+{%   set _sites = [] %}
+{%   set _local_site = {} %}
+{%   set _ = _local_site.update({'connection': 'local'}) %}
+{%   set _ = _local_site.update({'delegate_to': inventory_hostname}) %}
+{%   set _ = _local_site.update({'group': checkmk_server__site}) %}
+{%   set _ = _local_site.update({'home': checkmk_server__site_home}) %}
+{%   set _ = _local_site.update({'name': checkmk_server__site}) %}
+{%   set _ = _local_site.update({'omd_config': checkmk_server__omd_config}) %}
+{%   set _ = _local_site.update({'sshkeys': checkmk_server__sshkeys}) %}
+{%   set _ = _local_site.update({'update': checkmk_server__site_update}) %}
+{%   set _ = _local_site.update({'user': checkmk_server__site}) %}
+{%   set _ = _local_site.update({'version': checkmk_server__version}) %}
+{%   set _ = _sites.append(_local_site) %}
+{%   for _site_config in checkmk_server__distributed_sites %}
+{#
+ #  Set default values if undefined
+ #}
+{%     for _key, _value in checkmk_server__distributed_sites_defaults.iteritems() %}
+{%       if not _key in _site_config.keys() %}
+{%         set _ = _site_config.update({_key: _value}) %}
+{%       endif %}
+{%     endfor %}
+{#
+ #  If version is not defined, use global definition
+ #}
+{%     if not 'version' in _site_config.keys() %}
+{%       set _ = _site_config.update({'version': checkmk_server__version}) %}
+{%     endif %}
+{%     if not 'update' in _site_config.keys() %}
+{%       set _ = _site_config.update({'update': checkmk_server__site_update}) %}
+{%     endif %}
+{#
+ #  Auto-detect master site. Use the first site with 'connection=local'
+ #}
+{%     if not 'master_site' in _site_config.keys() %}
+{%       for _site in _sites %}
+{%         if ('connection' in _site.keys()) and (_site.connection == 'local') %}
+{%           set _ = _site_config.update({'master_site': _site.name}) %}
+{%         endif %}
+{%       endfor %}
+{%     endif %}
+{%     if not 'master_delegate_to' in _site_config.keys() %}
+{%       set _ = _site_config.update({'master_delegate_to': inventory_hostname}) %}
+{%     endif %}
+{#
+ #  If hostname for the site is not defined, query server facts
+ #}
+{%     if not 'hostname' in _site_config %}
+{%       if 'checkmk_server__hostname' in hostvars[_site_config.delegate_to].keys() %}
+{%         set _ = _site_config.update({'hostname': hostvars[_site_config.delegate_to].checkmk_server__hostname}) %}
+{%       elif 'ansible_fqdn' in hostvars[_site_config.delegate_to].keys() %}
+{%         set _ = _site_config.update({'hostname': hostvars[_site_config.delegate_to].ansible_fqdn}) %}
+{%       else %}
+{%         set _ = _site_config.update({'hostname': _site_config.delegate_to + "." + ansible_domain}) %}
+{%       endif %}
+{%     endif %}
+{#
+ #  Set some fix installation defaults
+ #}
+{%     set _ = _site_config.update({'user': _site_config.name}) %}
+{%     set _ = _site_config.update({'group': _site_config.name}) %}
+{%     set _ = _site_config.update({'home': checkmk_server__site_home|dirname + '/' + _site_config.name}) %}
+{#
+ #  SSH keypair setup
+ #}
+{%     if not 'sshkeys' in _site_config %}
+{%       if 'checkmk_server__sshkeys' in hostvars[_site_config.delegate_to].keys() %}
+{%         set _ = _site_config.update({'sshkeys': hostvars[_site_config.delegate_to].checkmk_server__sshkeys}) %}
+{%       else %}
+{%         set _ = _site_config.update({'sshkeys': checkmk_server__sshkeys}) %}
+{%       endif %}
+{%     endif %}
+{#
+ #  Define TCP livestatus connection
+ #}
+{%     if not 'livestatus_port' in _site_config %}
+{%       if 'checkmk_server__livestatus_port' in hostvars[_site_config.delegate_to].keys() %}
+{%         set _ = _site_config.update({'livestatus_port': hostvars[_site_config.delegate_to].checkmk_server__livestatus_port}) %}
+{%       else %}
+{%         set _ = _site_config.update({'livestatus_port': (checkmk_server__livestatus_port | string)}) %}
+{%       endif %}
+{%     endif %}
+{%     if not 'livestatus_socket' in _site_config.keys() %}
+{%       set _ = _site_config.update({'livestatus_socket': 'tcp:' + _site_config.hostname + ':' + (checkmk_server__livestatus_port | string)}) %}
+{%     endif %}
+{#
+ #  Define OMD configuration
+ #}
+{%     if not 'omd_config' in _site_config.keys() %}
+{%       if 'checkmk_server__omd_config' in hostvars[_site_config.delegate_to].keys() %}
+{%         set _omd_config_origin = hostvars[_site_config.delegate_to].checkmk_server__omd_config %}
+{%       else %}
+{%         set _omd_config_origin = checkmk_server__omd_config %}
+{%       endif %}
+{%       set _omd_config = [] %}
+{%       for _list_item in _omd_config_origin %}
+{%         set _ = _omd_config.append(_list_item) %}
+{%       endfor %}
+{%       if _site_config.livestatus_port %}
+{%         set _ = _omd_config.extend([{'var': 'LIVESTATUS_TCP', 'value': 'on'}, {'var': 'LIVESTATUS_TCP_PORT', 'value': _site_config.livestatus_port}]) %}
+{%       endif %}
+{%       set _ = _site_config.update({'omd_config': _omd_config}) %}
+{%     endif %}
+{#
+ #  Define multisite user password
+ #}
+{%     if (not 'multisite_password' in _site_config.keys()) and
+          ((_site_config.multisite_replication == True) or (_site_config.connection == 'local')) %}
+{%       set _ = _site_config.update({'multisite_password': lookup('password', secret + '/credentials/' + (_site_config.master_delegate_to|d(inventory_hostname)) + '/checkmk_server/' + _site_config.name + '/' + _site_config.multisite_username + '/password')}) %}
+{%     endif %} 
+{#
+ #  Define relative URL prefix for access via mod_proxy
+ #}
+{%     if not 'multisite_url_prefix' in _site_config.keys() %}
+{%       set _ = _site_config.update({'multisite_url_prefix': '/' + _site_config.name + '/'}) %}
+{%     endif %}
+{#
+ #  Define Multisite Web access
+ #}
+{%     if not 'multisite_url' in _site_config.keys() %}
+{#  TODO: properly set http/https #}
+{%       set _ = _site_config.update({'multisite_url': 'https://' + _site_config.hostname + _site_config.multisite_url_prefix + 'check_mk/'}) %}
+{%     endif %}       
+{#
+ #  Make sure 'disabled' is defined
+ #}
+{%     if ('state' in _site_config.keys()) and (not 'multisite_disabled' in _site_config.keys()) %}
+{%       if _site_config.state == 'disabled' %}
+{%         set _is_disabled = True %}
+{%       else %}
+{%         set _is_disabled = False %}
+{%       endif %}
+{%       set _ = _site_config.update({'multisite_disabled': _is_disabled}) %}
+{%     else %}
+{%       set _ = _site_config.update({'multisite_disabled': False}) %}
+{%     endif %}
+{%     set _ = _sites.append(_site_config) %}
+{%   endfor %}
+{{ _sites | to_yaml }}
+{% endif %}
