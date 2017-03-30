@@ -103,20 +103,17 @@
   loop_control:
     loop_var: site_item
 
+- name: Monitoring site user authentication
+  include: users.yml
+  with_items: '{{ checkmk_server__sites }}'
+  loop_control:
+    loop_var: site_item
+  tags:
+    - 'role::checkmk_server:multisite'
+    - 'role::checkmk_server:users'
+
 - fail: 
     msg: 'Check what happend so far'
-
-#- name: Check distributed site state
-#  stat:
-#    path: '{{ checkmk_server__site_home }}/{{ checkmk_server__site_config_path }}/distributed_wato.mk'
-#  register: checkmk_server__multisite_distributed_wato_mk
-
-#- name: Monitoring site user authentication
-#  include: users.yml
-#  when: checkmk_server__site|d() and
-#        ((checkmk_server__multisite_slave|d() and
-#          not checkmk_server__multisite_distributed_wato_mk.stat.exists) or
-#         not checkmk_server__multisite_slave|d())
 
 - name: Manage WATO and monitoring rules
   include: wato.yml
