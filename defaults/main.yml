@@ -374,11 +374,11 @@ checkmk_server__multisite_users: '{{ checkmk_server__multisite_debops_users |
 checkmk_server__multisite_debops_users:
   ansible:
     alias: 'Automation User used by Ansible'
-    automation_secret: '{{ lookup("password", secret + "/credentials/" + ansible_fqdn + "/checkmk_server/" + checkmk_server__site + "/ansible/secret") }}'
+    automation_secret: '{{ lookup("password", secret + "/credentials/" + inventory_hostname + "/checkmk_server/" + checkmk_server__site + "/ansible/secret") }}'
     roles: [ 'api' ]
   sitesync:
     alias: 'Synchronization User for Multisite'
-    password: '{{ lookup("password", secret + "/credentials/" + ansible_fqdn + "/checkmk_server/" + checkmk_server__site + "/sitesync/password") }}'
+    password: '{{ lookup("password", secret + "/credentials/" + inventory_hostname + "/checkmk_server/" + checkmk_server__site + "/sitesync/password") }}'
     roles: [ 'admin' ]
 
 
