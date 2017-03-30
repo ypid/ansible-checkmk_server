@@ -31,6 +31,12 @@
 {%       endif %}
 {%     endfor %}
 {#
+ #  Alias must be set
+ #}
+{%     if not 'multisite_alias' in _site_config.keys() %}
+{%       set _ = _site_config.update({'multisite_alias': 'Remote site ' + _site_config.name}) %}
+{%     endif %}
+{#
  #  If version is not defined, use global definition
  #}
 {%     if not 'version' in _site_config.keys() %}
@@ -116,7 +122,7 @@
  #}
 {%     if (not 'multisite_password' in _site_config.keys()) and
           ((_site_config.multisite_replication == True) or (_site_config.connection == 'local')) %}
-{%       set _ = _site_config.update({'multisite_password': lookup('password', secret + '/credentials/' + (_site_config.master_delegate_to|d(inventory_hostname)) + '/checkmk_server/' + _site_config.name + '/' + _site_config.multisite_username + '/password')}) %}
+{%       set _ = _site_config.update({'multisite_password': lookup('password', secret + '/credentials/' + (_site_config.master_delegate_to|d(inventory_hostname)) + '/checkmk_server/' + _site_config.master_site + '/' + _site_config.multisite_username + '/password')}) %}
 {%     endif %} 
 {#
  #  Define relative URL prefix for access via mod_proxy
