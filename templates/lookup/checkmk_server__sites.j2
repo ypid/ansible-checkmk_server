@@ -14,13 +14,42 @@
 {%   set _ = _local_site.update({'delegate_to': inventory_hostname}) %}
 {%   set _ = _local_site.update({'group': checkmk_server__site}) %}
 {%   set _ = _local_site.update({'home': checkmk_server__site_home}) %}
+{%   set _ = _local_site.update({'hostname': checkmk_server__hostname}) %}
+{%   set _ = _local_site.update({'multisite_replication': ''}) %}
 {%   set _ = _local_site.update({'name': checkmk_server__site}) %}
 {%   set _ = _local_site.update({'omd_config': checkmk_server__omd_config}) %}
 {%   set _ = _local_site.update({'sshkeys': checkmk_server__sshkeys}) %}
 {%   set _ = _local_site.update({'update': checkmk_server__site_update}) %}
 {%   set _ = _local_site.update({'user': checkmk_server__site}) %}
 {%   set _ = _local_site.update({'version': checkmk_server__version}) %}
+{%   for _key, _value in checkmk_server__distributed_sites_defaults.iteritems() %}
+{%     if not _key in _local_site.keys() %}
+{%       set _ = _local_site.update({_key: _value}) %}
+{%     endif %}
+{%   endfor %}
+{%   if not 'multisite_alias' in _local_site.keys() %}
+{%     set _ = _local_site.update({'multisite_alias': 'Local site ' + _local_site.name}) %}
+{%   endif %}
+{%   if not 'multisite_url' in _local_site.keys() %}
+{%     set _ = _local_site.update({'multisite_url': ''}) %}
+{%   endif %}
+{#
+ #  Make sure 'disabled' is defined
+ #}
+{%   if ('state' in _local_site.keys()) and (not 'multisite_disabled' in _local_site.keys()) %}
+{%     if _local_site.state == 'disabled' %}
+{%       set _is_disabled = True %}
+{%     else %}
+{%       set _is_disabled = False %}
+{%     endif %}
+{%     set _ = _local_site.update({'multisite_disabled': _is_disabled}) %}
+{%   else %}
+{%     set _ = _local_site.update({'multisite_disabled': False}) %}
+{%   endif %}
 {%   set _ = _sites.append(_local_site) %}
+{#
+ #  Configure remote distributed sites
+ #}
 {%   for _site_config in checkmk_server__distributed_sites %}
 {#
  #  Set default values if undefined
@@ -97,7 +126,7 @@
 {%       endif %}
 {%     endif %}
 {%     if not 'livestatus_socket' in _site_config.keys() %}
-{%       set _ = _site_config.update({'livestatus_socket': 'tcp:' + _site_config.hostname + ':' + (checkmk_server__livestatus_port | string)}) %}
+{%       set _ = _site_config.update({'livestatus_socket': 'tcp:' + _site_config.hostname + ':' + _site_config.livestatus_port}) %}
 {%     endif %}
 {#
  #  Define OMD configuration
@@ -121,7 +150,7 @@
  #  Define multisite user password
  #}
 {%     if (not 'multisite_password' in _site_config.keys()) and
-          ((_site_config.multisite_replication == True) or (_site_config.connection == 'local')) %}
+          ((_site_config.multisite_replication == 'slave') or (_site_config.connection == 'local')) %}
 {%       set _ = _site_config.update({'multisite_password': lookup('password', secret + '/credentials/' + (_site_config.master_delegate_to|d(inventory_hostname)) + '/checkmk_server/' + _site_config.master_site + '/' + _site_config.multisite_username + '/password')}) %}
 {%     endif %} 
 {#

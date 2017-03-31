@@ -450,7 +450,7 @@ checkmk_server__distributed_sites_defaults:
   multisite_persist: False
   multisite_replicate_ec: False
   multisite_replicate_mkps: True
-  multisite_replication: True
+  multisite_replication: 'slave'
   multisite_status_host: None
   multisite_timeout: 10
   multisite_user_login: True

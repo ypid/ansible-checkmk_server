@@ -95,7 +95,7 @@
   # site which hasn't been synchronized yet
   when: (site_item.connection|d('remote') == 'local') or
         (('multisite_replication' in site_item.keys() and
-          site_item.multisite_replication|bool == True) and
+          site_item.multisite_replication == 'slave') and
          (not checkmk_server__register_distributed_wato_mk.stat.exists))
 
   # Delegate tasks to server of current site item

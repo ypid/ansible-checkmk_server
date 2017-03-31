@@ -112,6 +112,12 @@
     - 'role::checkmk_server:multisite'
     - 'role::checkmk_server:users'
 
+- name: Login on distributed sites
+  include: login.yml
+  when: (checkmk_server__sites | length) > 1
+  tags:
+    - 'role::checkmk_server:login'
+
 - fail: 
     msg: 'Check what happend so far'
 
