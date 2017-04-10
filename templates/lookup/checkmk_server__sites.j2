@@ -27,9 +27,24 @@
 {%       set _ = _local_site.update({_key: _value}) %}
 {%     endif %}
 {%   endfor %}
+{#
+ #  Set dependent role variables
+ #}
+{%     set _ = _local_site.update({'dependent_vars': {}}) %}
+{%     set _user = {'name': _local_site.user} %}
+{%     set _ = _user.update({'comment': 'OMD site ' + _local_site.name}) %}
+{%     set _ = _user.update({'shell': '/bin/bash'}) %}
+{%     set _ = _user.update({'home': _local_site.home}) %}
+{%     set _ = _local_site.dependent_vars.update({'users__accounts': [ _user ]}) %}
+{#
+ #  The site alias must be set
+ #}
 {%   if not 'multisite_alias' in _local_site.keys() %}
 {%     set _ = _local_site.update({'multisite_alias': 'Local site ' + _local_site.name}) %}
 {%   endif %}
+{#
+ #  Make sure multisite url is properly defined
+ #}
 {%   if not 'multisite_url' in _local_site.keys() %}
 {%     set _ = _local_site.update({'multisite_url': ''}) %}
 {%   endif %}
@@ -105,6 +120,15 @@
 {%     set _ = _site_config.update({'user': _site_config.name}) %}
 {%     set _ = _site_config.update({'group': _site_config.name}) %}
 {%     set _ = _site_config.update({'home': checkmk_server__site_home|dirname + '/' + _site_config.name}) %}
+{#
+ #  Set dependent role variables
+ #}
+{%     set _ = _site_config.update({'dependent_vars': {}}) %}
+{%     set _user = {'name': _site_config.user} %}
+{%     set _ = _user.update({'comment': 'OMD site ' + _site_config.name}) %}
+{%     set _ = _user.update({'shell': '/bin/bash'}) %}
+{%     set _ = _user.update({'home': _site_config.home}) %}
+{%     set _ = _site_config.dependent_vars.update({'users__accounts': [ _user ]}) %}
 {#
  #  SSH keypair setup
  #}

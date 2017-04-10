@@ -1,10 +1,47 @@
-{% set _site_facts = {} %}
-{% if checkmk_server__site|d() %}
-{%   set _ = _site_facts.update({checkmk_server__site: {"version": checkmk_server__version_label}}) %}
-{%   set _ = _site_facts[checkmk_server__site].update({"site_url": checkmk_server__site_url}) %}
-{%   set _ = _site_facts[checkmk_server__site].update({"webapi_url": checkmk_server__webapi_url}) %}
-{%   if checkmk_server__register_ssh_public_key.stdout|d() %}
-{%     set _ = _site_facts[checkmk_server__site].update({"ssh_public_key": checkmk_server__register_ssh_public_key.stdout}) %}
+{#
+ # Create a facts file with the sites hosted on the involved host.
+ #
+ # Distributed slaves sites are defined on the master server, therefore
+ # it may happen, that the facts file is merged from multiple configuration
+ # sources. Sites which are about to be deleted must not be listed in the
+ # resulting facts file.
+ #}
+{% set _site_facts = [] %}
+{% if ansible_local|d({}) and ('checkmk_server' in ansible_local) and
+      (not ansible_local.checkmk_server is string) and
+      (ansible_local.checkmk_server | length > 0) %}
+{%   for _local_site in ansible_local.checkmk_server %}
+{#
+ #  Site has been configured before but is not currently handled. Simply
+ #  add it again.
+ #}
+{%     if ('name' in _local_site) and (not _local_site.name == site_item.name) and
+          _local_site.delegate_to == site_item.delegate_to %}
+{#  HACK: to make sure only sites from the same delegate_to host are added #}
+{%       set _ = _site_facts.append(_local_site) %}
+{#
+ #  Site has been configured before and matches the currently handled.
+ #  If it's not marked to be absent, add it again.
+ #  TODO: merge _local_site and site_item
+ #}
+{%     elif (not ('state' in site_item.keys() and site_item.state == 'absent')) %}
+{%       set _ = _site_facts.append(site_item) %}
+{%     endif %}
+{%   endfor %}
+{#
+ #  There are already sites defined, but none of them match the site
+ #  currently handled. Add it to the facts if it's not meant to be
+ #  deleted.
+ #}
+{%   if (not site_item.name in (ansible_local.checkmk_server | map(attribute="name") | list)) and
+        (not site_item.name in (_site_facts | map(attribute="name") | list)) and
+        not ('state' in site_item.keys() and site_item.state == 'absent') %}
+{%       set _ = _site_facts.append(site_item) %}
 {%   endif %}
+{% else %}
+{#
+ #  There are no sites defined. Simply add the current site to the facts.
+ #}
+{%   set _ = _site_facts.append(site_item) %}
 {% endif %}
 {{ _site_facts | to_nice_json }}
