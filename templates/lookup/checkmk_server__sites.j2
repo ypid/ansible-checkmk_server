@@ -35,7 +35,11 @@
 {%     set _ = _user.update({'comment': 'OMD site ' + _local_site.name}) %}
 {%     set _ = _user.update({'shell': '/bin/bash'}) %}
 {%     set _ = _user.update({'home': _local_site.home}) %}
-{%     set _ = _local_site.dependent_vars.update({'users__accounts': [ _user ]}) %}
+{%     if ('generate_keypair' in checkmk_server__sshkeys) and (not checkmk_server__sshkeys.generate_keypair == False) %}
+{%       set _ = _user.update({'generate_ssh_key': True }) %}
+{%     endif %}
+{%     set _ = _local_site.dependent_vars.update({'users__dependent_accounts': [ _user ]}) %}
+{%     set _ = _local_site.dependent_vars.update({'etc_services__dependent_list': []}) %}
 {#
  #  The site alias must be set
  #}
@@ -121,15 +125,6 @@
 {%     set _ = _site_config.update({'group': _site_config.name}) %}
 {%     set _ = _site_config.update({'home': checkmk_server__site_home|dirname + '/' + _site_config.name}) %}
 {#
- #  Set dependent role variables
- #}
-{%     set _ = _site_config.update({'dependent_vars': {}}) %}
-{%     set _user = {'name': _site_config.user} %}
-{%     set _ = _user.update({'comment': 'OMD site ' + _site_config.name}) %}
-{%     set _ = _user.update({'shell': '/bin/bash'}) %}
-{%     set _ = _user.update({'home': _site_config.home}) %}
-{%     set _ = _site_config.dependent_vars.update({'users__accounts': [ _user ]}) %}
-{#
  #  SSH keypair setup
  #}
 {%     if not 'sshkeys' in _site_config %}
@@ -139,6 +134,19 @@
 {%         set _ = _site_config.update({'sshkeys': checkmk_server__sshkeys}) %}
 {%       endif %}
 {%     endif %}
+{#
+ #  Set dependent role variables
+ #}
+{%     set _ = _site_config.update({'dependent_vars': {}}) %}
+{%     set _user = {'name': _site_config.user} %}
+{%     set _ = _user.update({'comment': 'OMD site ' + _site_config.name}) %}
+{%     set _ = _user.update({'shell': '/bin/bash'}) %}
+{%     set _ = _user.update({'home': _site_config.home}) %}
+{%     if 'generate_keypair' in _site_config.sshkeys %}
+{%       set _ = _user.update({'generate_ssh_key': _site_config.sshkeys.generate_keypair }) %}
+{%       set _ = _site_config.pop('sshkeys') %}
+{%     endif %}
+{%     set _ = _site_config.dependent_vars.update({'users__dependent_accounts': [ _user ]}) %}
 {#
  #  Define TCP livestatus connection
  #}
@@ -152,6 +160,7 @@
 {%     if not 'livestatus_socket' in _site_config.keys() %}
 {%       set _ = _site_config.update({'livestatus_socket': 'tcp:' + _site_config.hostname + ':' + _site_config.livestatus_port}) %}
 {%     endif %}
+{%     set _ = _site_config.dependent_vars.update({'etc_services__dependent_list': [{'name': 'check-mk-livestatus-' + _site_config.name, 'port': _site_config.livestatus_port, 'comment': 'Check_MK server Livestatus'}]}) %}
 {#
  #  Define OMD configuration
  #}
