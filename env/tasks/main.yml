@@ -1,7 +1,11 @@
 ---
-
 - debug:
     var: checkmk_server__sites
+
+- name: Check that involved distributed sites servers are play hosts
+  assert:
+    that: checkmk_server__sites | map(attribute="delegate_to") | list | issubset(play_hosts)
+    msg: 'Make sure that playbook is run on all servers included in distributed sites. Not doing so might result in wrong variable defaults.'
 
 - name: Install prerequisite packages
   apt:
@@ -75,3 +79,6 @@
   with_items: '{{ checkmk_server__sites }}'
   loop_control:
     loop_var: site_item
+
+- debug:
+    var: ansible_local.checkmk_server
