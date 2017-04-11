@@ -25,6 +25,11 @@
  #  TODO: merge _local_site and site_item
  #}
 {%     elif (not ('state' in site_item.keys() and site_item.state == 'absent')) %}
+{%       if checkmk_server__register_ssh_public_key|d() and
+            'stdout' in checkmk_server__register_ssh_public_key and
+            checkmk_server__register_ssh_public_key.stdout | length > 0 %}
+{%         set _ = site_item.update({'ssh_public_key': checkmk_server__register_ssh_public_key.stdout}) %}
+{%       endif %}
 {%       set _ = _site_facts.append(site_item) %}
 {%     endif %}
 {%   endfor %}

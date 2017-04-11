@@ -6,22 +6,6 @@
 - name: Run site setup
   block:
 
-  - name: Get Check_MK default version
-    stat:
-      path: '/omd/versions/default'
-    register: checkmk_server__register_default
-    check_mode: no
-
-  - name: Set new default version
-    command: omd setversion '{{ site_item.version }}{{ checkmk_server__version_suffix }}'
-    when: (checkmk_server__register_default.stat.lnk_source |
-           basename) != (site_item.version + checkmk_server__version_suffix)
-
-  - name: Create Check_MK site
-    command: omd create '{{ site_item.name }}'
-    args:
-      creates: '{{ site_item.home }}/etc/omd/site.conf'
-
   - name: Get Check_MK site version
     command: omd version '{{ site_item.name }}'
     register: checkmk_server__register_site_version
@@ -84,63 +68,6 @@
   - name: Start Check_MK site (if required)
     command: omd start '{{ site_item.name }}'
     when: checkmk_server__register_omd_stop | changed
-
-  - name: Create .ssh directory
-    file:
-      path: '{{ site_item.home }}/.ssh'
-      state: directory
-      owner: '{{ site_item.user }}'
-      group: '{{ site_item.group }}'
-      mode: '0700'
-    when: site_item.sshkeys
-
-  - name: Generate SSH keypair
-    become_user: '{{ site_item.user }}'
-    command: 'ssh-keygen {{ "-b " + site_item.sshkeys.keysize if "keysize" in site_item.sshkeys else "-b 4096" }} -f {{ site_item.home }}/.ssh/id_rsa -N ""'
-    args:
-      creates: '{{ site_item.home }}/.ssh/id_rsa'
-    when: site_item.sshkeys and site_item.sshkeys.generate_keypair|d(False)
-
-#  - name: Fix SSH keypair ownership
-#    file:
-#      path: '{{ checkmk_server__site_home }}/.ssh/{{ item }}'
-#      owner: '{{ checkmk_server__user }}'
-#      group: '{{ checkmk_server__group }}'
-#    ignore_errors: '{{ ansible_check_mode }}'
-#    with_items: [ 'id_rsa', 'id_rsa.pub' ]
-#    when: checkmk_server__sshkeys|d() and
-#          ("generate_keypair" in checkmk_server__sshkeys|d() and
-#           checkmk_server__sshkeys.generate_keypair)
-
-  - name: Copy SSH private key
-    copy:
-      src: '{{ site_item.sshkeys.privatekey_file }}'
-      dest: '{{ site_item.home }}/.ssh/id_rsa'
-      owner: '{{ site_item.user }}'
-      group: '{{ site_item.group }}'
-      mode: '0600'
-    when: site_item.sshkeys and site_item.sshkeys.privatekey_file|d(False)
-
-  - name: Copy SSH public key
-    copy:
-      src: '{{ site_item.sshkeys.publickey_file }}'
-      dest: '{{ site_item.home }}/.ssh/id_rsa.pub'
-      owner: '{{ site_item.user }}'
-      group: '{{ site_item.group }}'
-      mode: '0644'
-    when: site_item.sshkeys and site_item.sshkeys.publickey_file|d(False)
-
-#  - name: Read SSH public key
-#    command: 'cat {{ checkmk_server__site_home }}/.ssh/id_rsa.pub'
-#    changed_when: False
-#    ignore_errors: '{{ ansible_check_mode }}'
-#    register: checkmk_server__register_ssh_public_key
-#    when: checkmk_server__sshkeys|d()
-
-  rescue:
-    - name: Print current site configuration
-      debug:
-        var: site_item
 
   # delegate block
   delegate_to: '{{ site_item.delegate_to

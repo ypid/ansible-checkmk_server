@@ -50,6 +50,12 @@
   when: not checkmk_server__pki|d(False) and checkmk_server_register_mod_ssl.stat.exists
   notify: [ 'Reload apache2' ]
 
+- name: Manage SSH keys for monitoring and site synchronization
+  include: ssh.yml
+  with_items: '{{ checkmk_server__sites }}'
+  loop_control:
+    loop_var: site_item
+
 - name: Manage Check_MK site
   include: site.yml
   with_items: '{{ checkmk_server__sites }}'
