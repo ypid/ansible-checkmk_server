@@ -3,9 +3,6 @@
 # Check_MK multisite/WATO configuration
 #
 
-
-
-
 - name: Generate Check_MK WATO multisite definitions
   template:
     src: '{{ lookup("template_src", "etc/check_mk/multisite.d/wato/" + item | basename) }}'

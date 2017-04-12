@@ -76,7 +76,7 @@
 
 - name: Manage WATO and monitoring rules
   include: wato.yml
-  when: checkmk_server__site != False
+  when: (checkmk_server__sites | length) > 0
 
 - name: Upload configuration to slave sites
   include: sync.yml
@@ -86,10 +86,5 @@
   loop_control:
     loop_var: site_item
   tags:
-    - 'role::checkmk_server:multisite'
-    - 'debug'
-
-- fail:
-    msg: 'Check what happend so far'
-
-
+    - role::checkmk_server:rules
+    - role::checkmk_server:multisite
