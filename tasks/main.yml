@@ -52,9 +52,6 @@
 
 - name: Manage SSH keys for monitoring and site synchronization
   include: ssh.yml
-  with_items: '{{ checkmk_server__sites }}'
-  loop_control:
-    loop_var: site_item
 
 - name: Manage Check_MK site
   include: site.yml

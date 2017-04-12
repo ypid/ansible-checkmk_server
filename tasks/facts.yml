@@ -2,6 +2,12 @@
 #
 # Set site facts so that later tasks can depend on it
 #
+# IMPORTANT:
+# These tasks are run for each Check_MK site defined
+# in `checkmk_server__sites`. This means they can run multiple
+# times per server. If the monitoring site is a remote slave,
+# they might even run on a different server. The site configuration
+# is available through `site_item`.
 
 - name: Persist site facts
   block:
@@ -22,10 +28,6 @@
       group: 'root'
       mode: '0644'
     register: checkmk_server__register_local_facts
-
-  - name: Re-read local facts if they have been changed
-    action: setup
-    when: checkmk_server__register_local_facts | changed
 
   # Delegate entire block to corresponding host
   delegate_to: '{{ site_item.delegate_to

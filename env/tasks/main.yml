@@ -80,5 +80,8 @@
   loop_control:
     loop_var: site_item
 
+- name: Re-read local facts
+  action: setup
+
 - debug:
     var: ansible_local.checkmk_server

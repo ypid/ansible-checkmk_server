@@ -1,50 +1,16 @@
 ---
 
-- name: Handle SSH keys
-  block:
+- name: Manage SSH keys for monitoring and site synchronization
+  include: ssh_keys.yml
+  with_items: '{{ checkmk_server__sites }}'
+  loop_control:
+    loop_var: site_item
 
-  - name: Create .ssh directory
-    file:
-      path: '{{ site_item.home }}/.ssh'
-      state: directory
-      owner: '{{ site_item.user }}'
-      group: '{{ site_item.group }}'
-      mode: '0700'
-    when: ('sshkeys' in site_item) and site_item.sshkeys
+- name: Re-read local facts
+  action: setup
 
-  - name: Copy SSH private key
-    copy:
-      src: '{{ site_item.sshkeys.privatekey_file }}'
-      dest: '{{ site_item.home }}/.ssh/id_rsa'
-      owner: '{{ site_item.user }}'
-      group: '{{ site_item.group }}'
-      mode: '0600'
-    when: ('sshkeys' in site_item) and
-          site_item.sshkeys.privatekey_file|d(False)
-
-  - name: Copy SSH public key
-    copy:
-      src: '{{ site_item.sshkeys.publickey_file }}'
-      dest: '{{ site_item.home }}/.ssh/id_rsa.pub'
-      owner: '{{ site_item.user }}'
-      group: '{{ site_item.group }}'
-      mode: '0644'
-    when: ('sshkeys' in site_item) and
-          site_item.sshkeys.publickey_file|d(False)
-
-  - name: Read SSH public key
-    command: 'cat {{ site_item.home }}/.ssh/id_rsa.pub'
-    register: checkmk_server__register_ssh_public_key
-    changed_when: False
-
-  - name: Show SSH public key of site '{{ site_item.name }}'
-    debug:
-      var: checkmk_server__register_ssh_public_key.stdout
-      verbosity: 1
-
-  - name: Re-generate local facts
-    include: facts.yml
-
-  # delegate block
-  delegate_to: '{{ site_item.delegate_to
-                   if (not site_item.delegate_to == inventory_hostname) else omit }}'
+- name: Setup SSH public key login on slave sites
+  include: ssh_login.yml
+  with_items: '{{ checkmk_server__sites }}'
+  loop_control:
+    loop_var: site_item

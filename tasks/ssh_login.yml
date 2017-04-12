@@ -6,9 +6,16 @@
 # they might even run on a different server. The site configuration
 # is available through `site_item`.
 
-- name: Create Check_MK site
-  command: omd create '{{ site_item.name }}'
-  args:
-    creates: '{{ site_item.home }}/etc/omd/site.conf'
+- block:
+
+  - name: Allow SSH login from master site
+    authorized_key:
+      user: '{{ site_item.user }}'
+      key: '{{ item.ssh_public_key }}'
+    when: item.name == site_item.master_site
+    with_items: '{{ hostvars[site_item.master_delegate_to].ansible_local.checkmk_server
+                    if ("master_delegate_to" in site_item.keys()) else [] }}'
+
+  # delegate block
   delegate_to: '{{ site_item.delegate_to
                    if (not site_item.delegate_to == inventory_hostname) else omit }}'
