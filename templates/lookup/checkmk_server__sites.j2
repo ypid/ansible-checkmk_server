@@ -18,7 +18,6 @@
 {%   set _ = _local_site.update({'multisite_replication': ''}) %}
 {%   set _ = _local_site.update({'name': checkmk_server__site}) %}
 {%   set _ = _local_site.update({'omd_config': checkmk_server__omd_config}) %}
-{%   set _ = _local_site.update({'sshkeys': checkmk_server__sshkeys}) %}
 {%   set _ = _local_site.update({'update': checkmk_server__site_update}) %}
 {%   set _ = _local_site.update({'user': checkmk_server__site}) %}
 {%   set _ = _local_site.update({'version': checkmk_server__version}) %}
@@ -35,11 +34,13 @@
 {%     set _ = _user.update({'comment': 'OMD site ' + _local_site.name}) %}
 {%     set _ = _user.update({'shell': '/bin/bash'}) %}
 {%     set _ = _user.update({'home': _local_site.home}) %}
+{%     set _ = _user.update({'groups': 'sshusers'}) %}
 {%     if ('generate_keypair' in checkmk_server__sshkeys) and (not checkmk_server__sshkeys.generate_keypair == False) %}
 {%       set _ = _user.update({'generate_ssh_key': True }) %}
 {%     endif %}
 {%     set _ = _local_site.dependent_vars.update({'users__dependent_accounts': [ _user ]}) %}
 {%     set _ = _local_site.dependent_vars.update({'etc_services__dependent_list': []}) %}
+
 {#
  #  The site alias must be set
  #}
@@ -142,6 +143,7 @@
 {%     set _ = _user.update({'comment': 'OMD site ' + _site_config.name}) %}
 {%     set _ = _user.update({'shell': '/bin/bash'}) %}
 {%     set _ = _user.update({'home': _site_config.home}) %}
+{%     set _ = _user.update({'groups': 'sshusers'}) %}
 {%     if 'generate_keypair' in _site_config.sshkeys %}
 {%       set _ = _user.update({'generate_ssh_key': _site_config.sshkeys.generate_keypair }) %}
 {%       set _ = _site_config.pop('sshkeys') %}
