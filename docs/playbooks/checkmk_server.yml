@@ -6,11 +6,16 @@
 
   roles:
 
+    - role: debops-contrib.checkmk_server/env
+      tags: [ 'role::checkmk_server', 'role::checkmk_server:env' ]
+
+    - role: debops.users
+      tags: [ 'role::users' ]
+      users__dependent_accounts: '{{ ansible_local.checkmk_server | map(attribute="dependent_vars.users__dependent_accounts") | list }}'
+
     - role: debops.etc_services
       tags: [ 'role::etc_services' ]
-      etc_services__dependent_list:
-        - '{{ checkmk_server__etc_services__dependent_list }}'
-      when: checkmk_server__multisite_livestatus|d()
+      etc_services__dependent_list: '{{ ansible_local.checkmk_server | map(attribute="dependent_vars.etc_services__dependent_list") | list }}'
 
     - role: debops.ferm
       tags: [ 'role::ferm' ]
