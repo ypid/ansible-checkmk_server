@@ -16,7 +16,7 @@
 # .. envvar:: checkmk_server__version
 #
 # Check_MK software version.
-checkmk_server__version: '1.2.8p16'
+checkmk_server__version: '1.2.8p20'
 
 
 # .. envvar:: checkmk_server__version_suffix
@@ -460,6 +460,7 @@ checkmk_server__site_config_map: '{{ checkmk_server__site_cfg_contactgroups +
                                      checkmk_server__site_cfg_servicegroups +
                                      checkmk_server__site_cfg_datasource_programs +
                                      checkmk_server__site_cfg_netif_description +
+                                     checkmk_server__site_cfg_notification_defaults +
                                      checkmk_server__site_cfg_software_inventory }}'
 
 
@@ -486,7 +487,7 @@ checkmk_server__contact_defaults:
 checkmk_server__site_cfg_contactgroups:
   - name: 'define_contactgroups'
     value:
-      all: 'Everybody'
+      all: 'Everything'
 
 
 # .. envvar:: checkmk_server__site_cfg_rules
@@ -565,6 +566,20 @@ checkmk_server__site_cfg_software_inventory:
                     else "absent" }}'
 
 
+# .. envvar:: checkmk_server__site_cfg_notification_defaults
+#
+# Set fallback email address for rule based notifications. Must be set
+# including domain otherwise it won't be accepted by Check_MK.
+checkmk_server__site_cfg_notification_defaults:
+  - name: 'notification_fallback_email'
+    filename: 'global.mk'
+    template: 'key_value'
+    value: '{{ ansible_local.core.admin_public_email[0]
+               if ("core" in ansible_local) and
+                  ("admin_public_email" in ansible_local.core)
+               else "root@" + ansible_domain }}'
+
+
 # .. envvar:: checkmk_server__site_cfg_netif_description
 #
 # Set interface name instead of index for network interface check via
@@ -575,6 +590,13 @@ checkmk_server__site_cfg_netif_description:
     template: 'key_value'
     value: 'True'
     wato: False
+
+
+# .. envvar:: checkmk_server__site_packages
+#
+# Additional Check_MK packages (MKP) to be installed. See
+# :ref:`checkmk_server__site_packages` for more information.
+checkmk_server__site_packages: []
 
 
 # -----------------
