@@ -22,5 +22,5 @@ Added
 Fixed
 ~~~~~
 
-- Fix ``checkmk_server__ssh_command`` which would have been wrongly generated
-  with ``checkmk_server__ssh_user`` set to ``root``. [ypid_]
+- Fix :envvar:`checkmk_server__ssh_command` which would have been wrongly generated
+  with :envvar:`checkmk_server__ssh_user` set to ``root``. [ypid_]

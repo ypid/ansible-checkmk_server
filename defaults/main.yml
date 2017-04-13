@@ -9,6 +9,7 @@
 #
 # .. include:: includes/all.rst
 
+
 # General Configuration [[[
 # -------------------------
 
@@ -17,8 +18,8 @@
 # Check_MK software version.
 checkmk_server__version: '1.2.8p20'
 
-
-# .. envvar:: checkmk_server__version_suffix
+                                                                   # ]]]
+# .. envvar:: checkmk_server__version_suffix [[[
 #
 # Check_MK version suffix to :envvar:`checkmk_server__version` used with the
 # :command:`omd` tool.
@@ -49,8 +50,8 @@ checkmk_server__ferm_dependent_rules: '{{
     checkmk_server__ferm_web_rules +
     (checkmk_server__ferm_livestatus_rules if checkmk_server__multisite_livestatus else [])
   }}'
-                                                                   # ]]]
 
+                                                                   # ]]]
 # .. envvar:: checkmk_server__ferm_web_rules [[[
 #
 # Firewall configuration for WATO Web access.
@@ -88,8 +89,8 @@ checkmk_server__web_allow: []
 # Check_MK Livestatus TCP socket. If list is empty, anyone can connect.
 checkmk_server__livestatus_allow: []
 
-
-# .. envvar:: checkmk_server__livestatus_port
+                                                                   # ]]]
+# .. envvar:: checkmk_server__livestatus_port [[[
 #
 # TCP port for Multisite Livestatus socket.
 checkmk_server__livestatus_port: 6557
@@ -161,7 +162,6 @@ checkmk_server__omd_config: '{{
   }}'
 
                                                                    # ]]]
-
 # .. envvar:: checkmk_server__omd_config_email [[[
 #
 # Administrator email address set via OMD.
@@ -177,8 +177,8 @@ checkmk_server__omd_config_core:
   - var: 'CORE'
     value: 'icinga'
 
-
-# .. envvar:: checkmk_server__sshkeys
+                                                                   # ]]]
+# .. envvar:: checkmk_server__sshkeys [[[
 #
 # Indicate if a SSH keypair should be provided to allow agent
 # connections via SSH. For more information check
@@ -211,12 +211,12 @@ checkmk_server__ssh_arguments: '-o BatchMode=yes -o StrictHostKeyChecking=no -o 
 # Multisite Web Configuration [[[
 # -------------------------------
 
-# .. envvar:: checkmk_server__multisite_config_path
+# .. envvar:: checkmk_server__multisite_config_path [[[
 #
 # Configuration path for Check_MK multisite configurations. Relative to the
 # site's chroot directory.
 checkmk_server__multisite_config_path: 'etc/check_mk/multisite.d'
-
+                                                                   # ]]]
                                                                    # ]]]
 # .. envvar:: checkmk_server__multisite_config_map [[[
 #
@@ -413,13 +413,19 @@ checkmk_server__multisite_user_connection_defaults:
 # Distributed monitoring sites configuration. For more details see
 # :ref:`checkmk_server__ref_distributed_sites`
 checkmk_server__distributed_sites: []
+
+                                                                   # ]]]
 #  name: site_name
 #  inventory_host: slavehost
 #  tls
 
+# .. envvar:: checkmk_server__sites [[[
+#
+# FIXME(yaml4rst): Describe what this variable is doing.
 checkmk_server__sites: '{{ lookup("template", "lookup/checkmk_server__sites.j2", convert_data=False) | from_yaml }}'
 
-# .. envvar:: checkmk_server__distributed_sites_defaults
+                                                                   # ]]]
+# .. envvar:: checkmk_server__distributed_sites_defaults [[[
 #
 # Default sites properties for distributed monitoring.
 checkmk_server__distributed_sites_defaults:
@@ -459,7 +465,7 @@ checkmk_server__site_config_map: '{{ checkmk_server__site_cfg_contactgroups +
 # .. envvar:: checkmk_server__contact_defaults [[[
 #
 # Default contact properties. For a list of valid contact properties
-# see ``checkmk_server__contact_properties`` defined in :file:`vars/main.yml`.
+# see :envvar:`checkmk_server__contact_properties` defined in :file:`vars/main.yml`.
 # They are described under :envvar:`checkmk_server__multisite_users`.
 checkmk_server__contact_defaults:
   contactgroups: [ 'all' ]

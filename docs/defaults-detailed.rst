@@ -3,7 +3,7 @@ Default variable details
 
 .. include:: includes/all.rst
 
-Some of the debops-contrib.checkmk_server_ default variables have more extensive
+Some of the ``debops-contrib.checkmk_server`` default variables have more extensive
 configuration than simple strings or lists, here you can find documentation
 and examples for them.
 
