@@ -14,7 +14,7 @@
 {%   set _ = _local_site.update({'delegate_to': inventory_hostname}) %}
 {%   set _ = _local_site.update({'group': checkmk_server__site}) %}
 {%   set _ = _local_site.update({'home': checkmk_server__site_home}) %}
-{%   set _ = _local_site.update({'hostname': checkmk_server__hostname}) %}
+{%   set _ = _local_site.update({'hostname': checkmk_server__fqdn}) %}
 {%   set _ = _local_site.update({'multisite_replication': ''}) %}
 {%   set _ = _local_site.update({'name': checkmk_server__site}) %}
 {%   set _ = _local_site.update({'omd_config': checkmk_server__omd_config}) %}
@@ -111,8 +111,8 @@
  #  If hostname for the site is not defined, query server facts
  #}
 {%     if not 'hostname' in _site_config %}
-{%       if 'checkmk_server__hostname' in hostvars[_site_config.delegate_to].keys() %}
-{%         set _ = _site_config.update({'hostname': hostvars[_site_config.delegate_to].checkmk_server__hostname}) %}
+{%       if 'checkmk_server__fqdn' in hostvars[_site_config.delegate_to].keys() %}
+{%         set _ = _site_config.update({'hostname': hostvars[_site_config.delegate_to].checkmk_server__fqdn}) %}
 {%       elif 'ansible_fqdn' in hostvars[_site_config.delegate_to].keys() %}
 {%         set _ = _site_config.update({'hostname': hostvars[_site_config.delegate_to].ansible_fqdn}) %}
 {%       else %}
