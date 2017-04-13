@@ -465,7 +465,7 @@ checkmk_server__site_config_map: '{{ checkmk_server__site_cfg_contactgroups +
 # .. envvar:: checkmk_server__contact_defaults [[[
 #
 # Default contact properties. For a list of valid contact properties
-# see :envvar:`checkmk_server__contact_properties` defined in :file:`vars/main.yml`.
+# see FIXME ``checkmk_server__contact_properties`` defined in :file:`vars/main.yml`.
 # They are described under :envvar:`checkmk_server__multisite_users`.
 checkmk_server__contact_defaults:
   contactgroups: [ 'all' ]
