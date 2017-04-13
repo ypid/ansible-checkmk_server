@@ -18,19 +18,19 @@
 - name: Check apache2 mod_headers status
   stat:
     path: '/etc/apache2/mods-enabled/headers.load'
-  register: checkmk_server_register_mod_headers
+  register: checkmk_server__register_mod_headers
   changed_when: False
   always_run: True
 
 - name: Enable apache2 mod_headers
   command: 'a2enmod headers'
-  when: not checkmk_server_register_mod_headers.stat.exists
+  when: not checkmk_server__register_mod_headers.stat.exists
   notify: [ 'Reload apache2' ]
 
 - name: Check apache2 mod_ssl status
   stat:
     path: '/etc/apache2/mods-enabled/ssl.load'
-  register: checkmk_server_register_mod_ssl
+  register: checkmk_server__register_mod_ssl
   changed_when: False
   always_run: True
 
@@ -39,7 +39,7 @@
   with_items:
     - 'a2enmod ssl'
     - 'a2ensite default-ssl'
-  when: checkmk_server__pki|d(False) and not checkmk_server_register_mod_ssl.stat.exists
+  when: checkmk_server__pki|d(False) and not checkmk_server__register_mod_ssl.stat.exists
   notify: [ 'Reload apache2' ]
 
 - name: Disable apache2 mod_ssl
@@ -47,7 +47,7 @@
   with_items:
     - 'a2dismod ssl'
     - 'a2dissite default-ssl'
-  when: not checkmk_server__pki|d(False) and checkmk_server_register_mod_ssl.stat.exists
+  when: not checkmk_server__pki|d(False) and checkmk_server__register_mod_ssl.stat.exists
   notify: [ 'Reload apache2' ]
 
 - name: Manage SSH keys for monitoring and site synchronization
